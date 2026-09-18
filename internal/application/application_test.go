@@ -113,32 +113,40 @@ func TestSourcesWithoutScry(t *testing.T) {
 			t.Fatal("Scry still active")
 		}
 	}
-	if len(sources) != 18 {
+	if len(sources) != 19 {
 		t.Fatalf("sources=%d", len(sources))
 	}
 }
 
-func TestSlowCatalogsPausedWithScryAvailable(t *testing.T) {
+func TestGameQuestActiveWithSlowCatalogsPaused(t *testing.T) {
 	config, err := stores.LoadStoreConfig("../../config/stores.yaml", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, domain := range []string{"www.magic4ever.cl", "www.cartaslafortaleza.cl", "www.chronomagic.cl", "gamequest.cl"} {
+	gameQuest, found := config.Stores["gamequest.cl"]
+	if !found || !gameQuest.Enabled || !slices.Contains(gameQuest.Games, "magic") {
+		t.Fatal("GameQuest is not active for Magic")
+	}
+	for _, domain := range []string{"www.magic4ever.cl", "www.cartaslafortaleza.cl", "www.chronomagic.cl"} {
 		store, found := config.Stores[domain]
 		if !found || store.Enabled {
 			t.Fatalf("slow catalog active or missing: %s", domain)
 		}
 	}
 	sources := buildOfferSources(nil, scry.Client{}, config, nil, time.Minute, nil)
-	if len(sources) != 19 {
+	if len(sources) != 20 {
 		t.Fatalf("sources=%d", len(sources))
 	}
 	if _, ok := sources[0].(scry.Client); !ok {
 		t.Fatal("Scry missing")
 	}
+	found = false
 	for _, source := range sources {
-		if client, ok := source.(jumpseller.Client); ok && client.Domain != "www.deckscards.cl" {
-			t.Fatal("slow catalog still active")
+		if client, ok := source.(jumpseller.Client); ok && client.Domain == "gamequest.cl" {
+			found = true
 		}
+	}
+	if !found {
+		t.Fatal("GameQuest source missing")
 	}
 }
