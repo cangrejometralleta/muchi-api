@@ -131,6 +131,25 @@ func TestInvalidData(t *testing.T) {
 	}
 }
 
+func TestSearchSurvivesRepeatedPage(t *testing.T) {
+	calls := 0
+	client := Client{Fetcher: fixtureFetcher(func(string) ([]byte, error) {
+		calls++
+		switch calls {
+		case 1, 2:
+			return []byte(`{"products":[{"id":1,"name":"Other","permalink":"other"}]}`), nil
+		case 3:
+			return []byte(`{"products":[{"id":2,"name":"Sol Ring","permalink":"sol-ring"}]}`), nil
+		default:
+			return []byte(`{"products":[]}`), nil
+		}
+	})}
+	paths, err := client.findProducts(context.Background(), "Sol Ring")
+	if err != nil || len(paths) != 1 || paths[0] != "/sol-ring" || calls != 4 {
+		t.Fatalf("paths=%v calls=%d err=%v", paths, calls, err)
+	}
+}
+
 func TestMixedVariants(t *testing.T) {
 	data, err := os.ReadFile("testdata/www.magic4ever.cl.html")
 	if err != nil {

@@ -122,6 +122,23 @@ El plazo de despliegue y de las tareas HTTP se amplió a 1800 segundos para perm
 
 ### Estado de la Validación Jumpseller
 
+Validación posterior, 2026-09-18: GameQuest completó la búsqueda real de Sol Ring
+con 2 ofertas disponibles, primer precio de 5104 CLP y stock de esa oferta
+confirmado. La prueba `TestLiveSolRing/gamequest.cl` tardó 678,66 segundos
+y registró al menos 120 solicitudes. GameQuest está habilitada, pero conserva
+una latencia alta; esta prueba directa no valida los plazos del worker desplegado.
+
+Las páginas 40 y 41 comparten 15 IDs y también contienen productos distintos;
+la página 1000 devuelve una lista vacía. El lector ahora tolera una página sin
+IDs nuevos y consulta la siguiente. Dos páginas consecutivas sin novedades
+siguen siendo un error, para no declarar completo un catálogo posiblemente
+truncado. La prueba local cubre una repetición seguida de un producto nuevo.
+
+Pedir `limit=10000` o `per_page=10000` devolvió los mismos 40 productos de la
+primera página. Traer toda la búsqueda en una solicitud no quedó validado.
+El ajuste de paginación permite completar esta búsqueda, pero no reduce las
+solicitudes ni demuestra que el catálogo mantenga una instantánea consistente.
+
 Las consultas HTML completas confirmaron 17 ofertas disponibles en Cartas La Fortaleza, 2 en ChronoMagic y 3 en GameQuest, todas en CLP. La versión definitiva con búsqueda AJAX confirmó nuevamente las 2 de ChronoMagic. Magic4Ever superó la página 60 usando IDs de producto, pero respondió HTTP 429 al probar simultáneamente otras tiendas; no quedó validada su búsqueda completa. Las últimas consultas AJAX de Cartas La Fortaleza y GameQuest también recibieron 429.
 
 La pausa final de cuatro segundos y la serialización local se agregaron después de esa prueba. No se repitió otro barrido completo contra el límite activo. La coordinación Firestore existente sigue operando por dominio; la serialización local no garantiza un límite global entre instancias. Los errores 429 siguen visibles para el agregador y evitan almacenar resultados agregados incompletos en caché.

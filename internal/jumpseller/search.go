@@ -15,6 +15,7 @@ import (
 func (c Client) findProducts(ctx context.Context, name string) ([]string, error) {
 	seen := map[int64]bool{}
 	paths := make([]string, 0)
+	repeated := false
 	for page := 1; ; page++ {
 		data, err := c.fetchPage(ctx, "/api/search/"+url.PathEscape(name)+"?page="+strconv.Itoa(page))
 		if err != nil {
@@ -55,7 +56,12 @@ func (c Client) findProducts(ctx context.Context, name string) ([]string, error)
 			paths = append(paths, "/"+url.PathEscape(product.Permalink))
 		}
 		if added == 0 {
-			return nil, errors.New("Jumpseller pagination repeated products")
+			if repeated {
+				return nil, errors.New("Jumpseller pagination repeated products")
+			}
+			repeated = true
+			continue
 		}
+		repeated = false
 	}
 }
