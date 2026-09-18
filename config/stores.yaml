@@ -223,7 +223,7 @@ stores:
         district: Providencia
     timeout_seconds: 10
     allow_redirects: true
-    enabled: false
+    enabled: true
   www.magic4ever.cl:
     games: [magic]
     name: "Magic4Ever"
